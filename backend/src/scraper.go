@@ -33,7 +33,7 @@ func getAliens(aliensListURL string) []alien {
 
 	c.OnHTML(".portable-infobox", func(e *colly.HTMLElement) {
 		name := e.ChildText("[data-source=name]")
-		imgURL := e.ChildAttr("img", "src")
+		imgURL := getAlienImgURL(e)
 		species := e.ChildText("[data-source=species] a")
 		homePlanet := e.ChildText("[data-source=species] a")
 		powers := []string{}
@@ -56,6 +56,12 @@ func getAliens(aliensListURL string) []alien {
 	c.Visit(aliensListURL)
 
 	return aliens
+}
+
+func getAlienImgURL(e *colly.HTMLElement) string {
+	imgURL := e.ChildAttr("img", "src")
+	pngIndex := strings.Index(strings.ToLower(imgURL), ".png")
+	return imgURL[:pngIndex+4]
 }
 
 func getAlienPowers(e *colly.HTMLElement) []string {

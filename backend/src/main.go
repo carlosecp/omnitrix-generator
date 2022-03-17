@@ -7,11 +7,11 @@ import (
 )
 
 type alien struct {
-	Name       string
-	ImgURL     string
-	Species    string
-	HomePlanet string
-	Powers     []string
+	Name       string   `json:"name"`
+	ImgURL     string   `json:"imgURL"`
+	Species    string   `json:"species"`
+	HomePlanet string   `json:"homePlanet"`
+	Powers     []string `json:"powers"`
 }
 
 func main() {
