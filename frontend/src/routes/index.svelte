@@ -1,6 +1,6 @@
 <script context="module">
 	export const load = async ({ fetch }) => {
-		const res = await fetch("http://127.0.0.0:8080");
+		const res = await fetch("http://127.0.0.1:8080");
 		const aliens = await res.json();
 
 		return {
@@ -11,27 +11,29 @@
 
 <script>
 	export let aliens;
+
+	import AlienCard from "../lib/AlienCard.svelte";
+
+	let searchTerm = "";
+
+	$: filteredAliens = aliens.filter(alien => {
+		return alien.name.toLowerCase().includes(searchTerm) ||
+			alien.species.toLowerCase().includes(searchTerm) ||
+			alien.homePlanet.toLowerCase().includes(searchTerm);
+	})
 </script>
 
-<div class="m-4 grid sm:grid-cols-2 gap-4">
-	{#each aliens as alien}
-		<article class="p-4 border rounded">
-			<div class="flex gap-4">
-				<img src={alien.imgURL} class="h-44 w-40 object-cover object-top" />
-				<div class="text-neutral-600">
-					<h1 class="font-medium text-xl text-neutral-900">{alien.name}</h1>
-					<strong class="font-medium text-neutral-800">Species:</strong> {alien.species}
-					<br/>
-					<strong class="font-medium text-neutral-800">Home Planet:</strong> {alien.homePlanet}
-					<br/>
-					<strong class="font-medium text-neutral-800">Powers:</strong> {alien.homePlanet}
-					<ul>
-						{#each alien.powers as power}
-							<li>{power}</li>
-						{/each}
-					</ul>
-				</div>
-			</div>
-		</article>
-	{/each}
+<div class="p-4 space-y-8">
+	<img src="/img/ben10.png" class="mx-auto" />
+	<label class="block mx-auto max-w-lg">
+		<input
+			bind:value={searchTerm}
+			class="w-full px-3 py-2 bg-white border border-slate-300 rounded-md focus:ring text-sm shadow-sm placeholder-slate-400 focus:outline-none focus:border-accent focus:ring-accent"
+			placeholder="Search an alien by name, species or planet..."/>
+	</label>
 </div>
+<main class="mt-4 p-4 grid sm:grid-cols-2 gap-4">
+	{#each filteredAliens as alien}
+		<AlienCard {alien} />
+	{/each}
+</main>

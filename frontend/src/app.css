@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+	.alien-card-content {
+		@apply text-gray-500 text-sm text-center sm:text-left;
+	}
+
+	.alien-card-content strong {
+		@apply font-medium text-gray-600;
+	}
+}
