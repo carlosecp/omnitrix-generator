@@ -1,27 +1,37 @@
 package main
 
-import (
-	"encoding/json"
-	"log"
-	"net/http"
+import "flag"
+
+const (
+	classicAliensWikiURL    = "https://ben10.fandom.com/wiki/Category:Original_Series_Aliens"
+	alienForceAliensWikiURL = "https://ben10.fandom.com/wiki/Category:Alien_Force_Aliens"
+	ultimeAliensWikiURL     = "https://ben10.fandom.com/wiki/Category:Ultimate_Alien_Aliens"
 )
 
-type alien struct {
-	Name       string   `json:"name"`
-	ImgURL     string   `json:"imgURL"`
-	Species    string   `json:"species"`
-	HomePlanet string   `json:"homePlanet"`
-	Powers     []string `json:"powers"`
-}
+var startServer = flag.Bool("server", false, "dump the data to a web server instead of saving it to a file")
 
 func main() {
-	classicAliens := getAliens("https://ben10.fandom.com/wiki/Category:Original_Series_Aliens")
+	flag.Parse()
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		enc := json.NewEncoder(w)
-		enc.SetIndent("", "  ")
-		enc.Encode(classicAliens)
-	})
+	wikisURLs := []string{
+		classicAliensWikiURL,
+		alienForceAliensWikiURL,
+		ultimeAliensWikiURL,
+	}
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	run(*startServer, wikisURLs)
+}
+
+func run(startServer bool, wikisURLs []string) {
+	aliensData := []alien{}
+
+	for _, wikiURL := range wikisURLs {
+		aliensData = append(aliensData, getAliensData(wikiURL)...)
+	}
+
+	if startServer {
+		handleServer(aliensData)
+	} else {
+		handleFile(aliensData)
+	}
 }

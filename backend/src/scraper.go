@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"os"
+	"regexp"
 	"strings"
 
 	"github.com/gocolly/colly"
@@ -14,7 +13,24 @@ const (
 	cacheDir           = "./ben10_fandom_cache"
 )
 
-func getAliens(aliensListURL string) []alien {
+const (
+	htmlATag            = "<a.*?>.*</a>"
+	htmlATagContent     = "<a.*?>(.*)</a>"
+	htmlBTag            = "<b>.*</b>"
+	htmlBrTag           = "<br/>"
+	htmlSmallTag        = "<small>.*</small>"
+	htmlSmallTagContent = "<small>(.*)</small>"
+)
+
+type alien struct {
+	Name       string   `json:"name"`
+	ImgURL     string   `json:"imgURL"`
+	Species    string   `json:"species"`
+	HomePlanet string   `json:"homePlanet"`
+	Powers     []string `json:"powers"`
+}
+
+func getAliensData(wikiURL string) []alien {
 	c := colly.NewCollector(
 		colly.AllowedDomains(ben10FandomDomain1, ben10FandomDomain2),
 		colly.CacheDir(cacheDir),
@@ -23,10 +39,6 @@ func getAliens(aliensListURL string) []alien {
 	c.OnHTML(".category-page__member-link", func(e *colly.HTMLElement) {
 		wikiURL := e.Attr("href")
 		e.Request.Visit(wikiURL)
-	})
-
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Fprintf(os.Stderr, "visiting: %s\n", r.URL.String())
 	})
 
 	aliens := []alien{}
@@ -53,7 +65,7 @@ func getAliens(aliensListURL string) []alien {
 		aliens = append(aliens, newAlien)
 	})
 
-	c.Visit(aliensListURL)
+	c.Visit(wikiURL)
 
 	return aliens
 }
@@ -67,22 +79,18 @@ func getAlienImgURL(e *colly.HTMLElement) string {
 func getAlienPowers(e *colly.HTMLElement) []string {
 	powers := []string{}
 
-	htmlContent, err := e.DOM.Html()
-	if err != nil {
-		return powers
-	}
-
+	htmlContent, _ := e.DOM.Html()
 	content := removeHTMLTag(htmlBTag, htmlContent)
 
 	powers = strings.Split(content, htmlBrTag)
 	powers = removeEmpty(powers)
 
 	for i, power := range powers {
-		if isSurroundedByTag(htmlATag, power) {
+		if isSurroundedByHTMLTag(htmlATag, power) {
 			powers[i] = removeHTMLTag(htmlATagContent, power)
 		}
 
-		if isSurroundedByTag(htmlSmallTag, power) {
+		if isSurroundedByHTMLTag(htmlSmallTag, power) {
 			powers[i] = removeHTMLTag(htmlSmallTagContent, power)
 		}
 
@@ -90,4 +98,26 @@ func getAlienPowers(e *colly.HTMLElement) []string {
 	}
 
 	return powers
+}
+
+func isSurroundedByHTMLTag(regex, src string) bool {
+	matched, _ := regexp.MatchString(regex, src)
+	return matched
+}
+
+func removeHTMLTag(pattern, src string) string {
+	reg := regexp.MustCompile(pattern)
+	return reg.ReplaceAllString(src, "${1}")
+}
+
+func removeEmpty(s []string) []string {
+	r := []string{}
+
+	for _, str := range s {
+		if str != "" {
+			r = append(r, str)
+		}
+	}
+
+	return r
 }
