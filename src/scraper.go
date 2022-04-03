@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -39,6 +40,10 @@ func getAliensData(wikiURL string) []alien {
 	c.OnHTML(".category-page__member-link", func(e *colly.HTMLElement) {
 		wikiURL := e.Attr("href")
 		e.Request.Visit(wikiURL)
+	})
+
+	c.OnRequest(func(r *colly.Request) {
+		fmt.Println("> Downloading...", r.URL.String())
 	})
 
 	aliens := []alien{}
