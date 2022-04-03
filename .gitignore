@@ -1,8 +1,2 @@
 *.csv
-.DS_Store
-node_modules
-/frontend/build
-/frontend/.svelte-kit
-/frontend/package
 ben10_fandom_cache
-main
